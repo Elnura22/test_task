@@ -20,21 +20,24 @@ public class DataController {   // контроллер для работы с �
 
     @PostMapping("/{tableName}")
     public ResponseEntity<Map<String, Object>> createRecord(@PathVariable("tableName") @NotBlank String tableName,
-                                          @RequestBody Map<String, Object> recordData) {
+                                                            @RequestBody Map<String, Object> recordData) {
         return dataService.createRecord(tableName, recordData);
     }
-    //2.5.2. Чтение Списка Записей (с пагинацией)
-    // Эндпоинт: GET /api/v1/dynamic-tables/data/{tableName}
 
-    //2.5.3. Чтение Записи по ID
-    //Эндпоинт: GET /api/v1/dynamic-tables/data/{tableName}/{id}
-
-    //2.5.4. Обновление Записи (Полное)
-    //Эндпоинт: PUT /api/v1/dynamic-tables/data/{tableName}/{id}
+    @GetMapping("/{tableName}/{id}")
+    public ResponseEntity<Map<String, Object>> getRecord(@PathVariable("tableName") @NotBlank String tableName,
+                                                         @NotNull Long id) {
+        return dataService.getRecord(tableName, id);
+    }
 
     @DeleteMapping("/{tableName}/{id}")
     public ResponseEntity<Object> deleteRecord(@PathVariable String tableName,
                                                @PathVariable("id") @NotNull Long id) {
         return dataService.deleteRecord(tableName, id);
     }
+     /*
+      не выполнено:
+    2.5.2. Чтение Списка Записей (с пагинацией)
+    2.5.4. Обновление Записи (Полное)
+      */
 }

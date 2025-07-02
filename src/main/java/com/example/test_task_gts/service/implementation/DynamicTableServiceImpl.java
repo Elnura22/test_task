@@ -38,7 +38,7 @@ public class DynamicTableServiceImpl implements DynamicTableService {
     private final HelperUtil helperUtil;
 
     @Override
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     public ResponseEntity<CreateSchemaResponse> createSchema(CreateSchemaRequest request) {
         validateTableExists(request.getTableName());
         log.info("list columns{}", request.getColumns());

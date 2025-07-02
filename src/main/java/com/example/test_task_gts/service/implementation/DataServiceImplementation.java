@@ -69,8 +69,7 @@ public class DataServiceImplementation implements DataService {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-
-    @Transactional
+    @Transactional(rollbackOn = Exception.class)
     @Override
     public ResponseEntity<Object> deleteRecord(String tableName, Long id) {
         validDynamicTable(tableName);
@@ -87,6 +86,13 @@ public class DataServiceImplementation implements DataService {
                     .message(e.getMessage())
                     .data(null).build(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @Override
+    public ResponseEntity<Map<String, Object>> getRecord(String tableName, Long id) {
+        validDynamicTable(tableName);
+        //получаем таблицу чрез jdbcTemplate
+        return null;
     }
 
     private void validDynamicTable(String tableName) {
