@@ -5,7 +5,7 @@ import com.example.test_task_gts.model.DynamicColumn;
 import com.example.test_task_gts.model.DynamicTable;
 import com.example.test_task_gts.repository.DynamicColumnRepository;
 import com.example.test_task_gts.service.DynamicColumnService;
-import com.example.test_task_gts.util.TypeConverter;
+import com.example.test_task_gts.util.HelperUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DynamicColumnServiceImpl implements DynamicColumnService {
 
-    private final TypeConverter typeConverter;
+    private final HelperUtil helperUtil;
     private final DynamicColumnRepository dynamicColumnRepository;
 
     public List<DynamicColumn> saveDynamicColumns(List<ColumnDtoRequest> columns, DynamicTable dynamicTable) {
@@ -28,7 +28,7 @@ public class DynamicColumnServiceImpl implements DynamicColumnService {
                     .tableDefinitionId(dynamicTable)
                     .columnName(column.getName())
                     .columnType(column.getType())
-                    .postgresColumnType(typeConverter.convertTypeToPostgresType(column.getType()))
+                    .postgresColumnType(helperUtil.convertTypeToPostgresType(column.getType()))
                     .isNullable(column.getIsNullable())
                     .isPrimaryKeyInternal(true)
                     .createdAt(LocalDateTime.now())

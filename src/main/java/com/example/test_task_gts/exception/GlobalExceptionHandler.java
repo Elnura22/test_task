@@ -41,4 +41,15 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(statusResponse, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(ColumnNotExistsException.class)
+    public ResponseEntity<StatusResponse<Object>> handleColumnNotExists(ColumnNotExistsException ex) {
+        StatusResponse<Object> statusResponse = StatusResponse.builder()
+                .code(Status.COLUMN_NOT_EXISTS.getCode())
+                .message(Status.COLUMN_NOT_EXISTS.getStatus())
+                .data(ex.getMessage())
+                .build();
+        return new ResponseEntity<>(statusResponse, HttpStatus.NOT_FOUND);
+    }
+
 }

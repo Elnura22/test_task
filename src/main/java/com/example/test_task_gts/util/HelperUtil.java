@@ -4,7 +4,7 @@ import com.example.test_task_gts.enums.ColumnType;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TypeConverter {
+public class HelperUtil {
 
     public String convertTypeToPostgresType(ColumnType columnType) {
         return switch (columnType) {
@@ -17,6 +17,12 @@ public class TypeConverter {
             case TIMESTAMP -> "TIMESTAMP WITHOUT TIME ZONE";
         };
     }
+
+
+    public String quoteIdentifier(String identifier) {
+        return "\"" + identifier.replace("\"", "\"\"") + "\"";
+    }
+
 }
 
 // здесь можно было конвертнуть не в стринг, а в PostgresType enum

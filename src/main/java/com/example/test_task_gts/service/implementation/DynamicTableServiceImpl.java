@@ -12,7 +12,7 @@ import com.example.test_task_gts.model.DynamicTable;
 import com.example.test_task_gts.repository.DynamicTableRepository;
 import com.example.test_task_gts.service.DynamicColumnService;
 import com.example.test_task_gts.service.DynamicTableService;
-import com.example.test_task_gts.util.TypeConverter;
+import com.example.test_task_gts.util.HelperUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,7 @@ public class DynamicTableServiceImpl implements DynamicTableService {
     private final JdbcTemplate jdbcTemplate;
     private final DynamicTableRepository dynamicTableRepository;
     private final DynamicColumnService dynamicColumnService;
-    private final TypeConverter typeConverter;
+    private final HelperUtil helperUtil;
 
     @Override
     @Transactional
@@ -74,12 +74,12 @@ public class DynamicTableServiceImpl implements DynamicTableService {
     private void createSqlTable(CreateSchemaRequest request) {
         StringBuilder script = new StringBuilder();
         script.append("CREATE TABLE ")
-                .append(quoteIdentifier(request.getTableName()))
+                .append(helperUtil.quoteIdentifier(request.getTableName()))
                 .append(" (id BIGSERIAL PRIMARY KEY,");
         List<ColumnDtoRequest> columns = request.getColumns();
         for (ColumnDtoRequest column : columns) {
-            script.append(quoteIdentifier(column.getName())).append(" ")
-                    .append(typeConverter.convertTypeToPostgresType(column.getType())).append(" ");
+            script.append(helperUtil.quoteIdentifier(column.getName())).append(" ")
+                    .append(helperUtil.convertTypeToPostgresType(column.getType())).append(" ");
             script.append("NOT NULL ");
             script.append(",");
         }
@@ -89,9 +89,6 @@ public class DynamicTableServiceImpl implements DynamicTableService {
         log.info("table {} created", request.getTableName());
     }
 
-    private String quoteIdentifier(String identifier) {
-        return "\"" + identifier.replace("\"", "\"\"") + "\"";
-    }
 
     private CreateSchemaResponse createSchemaResponse(DynamicTable dynamicTable, List<ColumnDtoResponse> columns) {
         return CreateSchemaResponse.builder()
