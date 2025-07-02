@@ -4,7 +4,9 @@ import com.example.test_task_gts.dto.requests.ColumnDtoRequest;
 import com.example.test_task_gts.dto.requests.CreateSchemaRequest;
 import com.example.test_task_gts.dto.respones.ColumnDtoResponse;
 import com.example.test_task_gts.dto.respones.CreateSchemaResponse;
+import com.example.test_task_gts.dto.respones.TableDto;
 import com.example.test_task_gts.exception.TableAlreadyExistsException;
+import com.example.test_task_gts.exception.TableNotFoundException;
 import com.example.test_task_gts.model.DynamicColumn;
 import com.example.test_task_gts.model.DynamicTable;
 import com.example.test_task_gts.repository.DynamicTableRepository;
@@ -20,7 +22,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -35,10 +40,7 @@ public class DynamicTableServiceImpl implements DynamicTableService {
     @Override
     @Transactional
     public ResponseEntity<CreateSchemaResponse> createSchema(CreateSchemaRequest request) {
-        boolean exists = dynamicTableRepository.existsByTableName(request.getTableName());
-        if (exists) {
-            throw new TableAlreadyExistsException(request.getTableName());
-        }
+        validateTableExists(request.getTableName());
         log.info("list columns{}", request.getColumns());
         createSqlTable(request);
         DynamicTable dynamicTable = saveDynamicTable(request);
@@ -97,5 +99,46 @@ public class DynamicTableServiceImpl implements DynamicTableService {
                 .userFriendlyName(dynamicTable.getUserFriendlyName())
                 .columns(columns)
                 .build();
+    }
+
+    @Override
+    public ResponseEntity<CreateSchemaResponse> getSchema(String tableName) {  // два запроса в базу, нужно потом через @Query вытащить
+        Optional<DynamicTable> dynamicTable = dynamicTableRepository.findByTableName(tableName);
+        if (dynamicTable.isEmpty()) {
+            throw new TableNotFoundException(tableName);
+        }
+        List<DynamicColumn> listColumns = dynamicColumnService.getDynamicColumns(dynamicTable.get());
+        CreateSchemaResponse response = CreateSchemaResponse.builder()
+                .tableName(dynamicTable.get().getTableName())
+                .userFriendlyName(dynamicTable.get().getUserFriendlyName())
+                .columns(columnsToColumnDtoResponse(listColumns))
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private void validateTableExists(String tableName) {
+        boolean exists = dynamicTableRepository.existsByTableName(tableName);
+        if (exists) {
+            throw new TableAlreadyExistsException(tableName);
+        }
+    }
+
+    @Override
+    public ResponseEntity<List<TableDto>> getAllTablesInfo() {
+        List<TableDto> listInfoTables = new ArrayList<>();
+        List<Object[]> testList = dynamicTableRepository.findAllWithColumnCount();
+        for (Object[] value : testList) { //не смогла сразу TableDto вытащить
+            String tableName = (String) value[0];
+            String userFriendlyName = (String) value[1];
+            int columnCount = (((Long) value[2]).intValue());
+            TableDto tableDto = TableDto.builder()
+                    .tableName(tableName)
+                    .userFriendlyName(userFriendlyName)
+                    .columnCount(columnCount)
+                    .build();
+            listInfoTables.add(tableDto);
+        }
+        listInfoTables.sort(Comparator.comparing(TableDto::getTableName));
+        return new ResponseEntity<>(listInfoTables, HttpStatus.OK);
     }
 }

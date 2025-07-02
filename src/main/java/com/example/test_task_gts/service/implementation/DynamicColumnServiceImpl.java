@@ -21,7 +21,7 @@ public class DynamicColumnServiceImpl implements DynamicColumnService {
     private final DynamicColumnRepository dynamicColumnRepository;
 
     public List<DynamicColumn> saveDynamicColumns(List<ColumnDtoRequest> columns, DynamicTable dynamicTable) {
-        DynamicColumn dynamicColumn = new DynamicColumn();
+        DynamicColumn dynamicColumn;
         List<DynamicColumn> columnsList = new ArrayList<>();
         for (ColumnDtoRequest column : columns) {
             dynamicColumn = DynamicColumn.builder()
@@ -39,5 +39,12 @@ public class DynamicColumnServiceImpl implements DynamicColumnService {
         return columnsList;
     }
 
-
+    @Override
+    public List<DynamicColumn> getDynamicColumns(DynamicTable dynamicTable) {
+        List<DynamicColumn> dynamicColumns = dynamicColumnRepository.findByTableDefinitionId(dynamicTable);
+        if (dynamicColumns != null) {
+            return dynamicColumns;
+        }
+        return List.of();
+    }
 }

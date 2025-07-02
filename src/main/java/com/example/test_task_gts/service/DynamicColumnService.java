@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface DynamicColumnService {
     List<DynamicColumn> saveDynamicColumns(List<ColumnDtoRequest> columns, DynamicTable dynamicTable);
+
+    List<DynamicColumn> getDynamicColumns(DynamicTable dynamicTable);
 }
