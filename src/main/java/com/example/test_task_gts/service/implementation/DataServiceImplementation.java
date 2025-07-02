@@ -1,12 +1,16 @@
 package com.example.test_task_gts.service.implementation;
 
+import com.example.test_task_gts.dto.StatusResponse;
 import com.example.test_task_gts.exception.ColumnNotExistsException;
+import com.example.test_task_gts.exception.RecordNotFoundException;
+import com.example.test_task_gts.exception.TableNotFoundException;
 import com.example.test_task_gts.model.DynamicColumn;
 import com.example.test_task_gts.model.DynamicTable;
 import com.example.test_task_gts.repository.DynamicColumnRepository;
 import com.example.test_task_gts.repository.DynamicTableRepository;
 import com.example.test_task_gts.service.DataService;
 import com.example.test_task_gts.util.HelperUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -27,6 +31,7 @@ public class DataServiceImplementation implements DataService {
     private final HelperUtil helperUtil;
     private final JdbcTemplate jdbcTemplate;
 
+    @Transactional
     @Override
     public ResponseEntity<Map<String, Object>> createRecord(String tableName, Map<String, Object> recordData) {
         Optional<DynamicTable> dynamicTable = dynamicTableRepository.findByTableName(tableName);
@@ -62,5 +67,32 @@ public class DataServiceImplementation implements DataService {
             jdbcTemplate.update(script.toString(), values.toArray());
         }
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+
+    @Transactional
+    @Override
+    public ResponseEntity<Object> deleteRecord(String tableName, Long id) {
+        validDynamicTable(tableName);
+        String script = String.format("DELETE FROM %s WHERE id = ?", helperUtil.quoteIdentifier(tableName)); //переделать unsafe
+        try {
+            int record = jdbcTemplate.update(script, id);
+            if (record == 0) {
+                throw new RecordNotFoundException("record wwith id " + id + " not found");
+            }
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+        } catch (Exception e) {
+            return new ResponseEntity<>(StatusResponse.builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message(e.getMessage())
+                    .data(null).build(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private void validDynamicTable(String tableName) {
+        Optional<DynamicTable> dynamicTable = dynamicTableRepository.findByTableName(tableName);
+        if (dynamicTable.isEmpty()) {
+            throw new TableNotFoundException("table with this name " + tableName + " doesnt exists");
+        }
     }
 }
